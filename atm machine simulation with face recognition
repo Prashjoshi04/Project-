@@ -1,0 +1,145 @@
+import cv2
+import numpy as np
+import random
+
+class ATM:
+    def __init__(self, pin, balance=0):
+        """Initialize ATM with PIN, balance, and transaction history"""
+        self.pin = pin
+        self.balance = balance
+        self.transaction_history = []
+
+    def verify_face(self):
+        """Simulated face recognition using OpenCV"""
+        print("\n[INFO] Starting Face Recognition...")
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+        cam = cv2.VideoCapture(0)
+        recognized = False
+
+        while True:
+            ret, frame = cam.read()
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+            for (x, y, w, h) in faces:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                recognized = True
+
+            cv2.imshow("Face Recognition", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q') or recognized:
+                break
+
+        cam.release()
+        cv2.destroyAllWindows()
+
+        if recognized:
+            print("[SUCCESS] Face Recognized!")
+            return True
+        else:
+            print("[ERROR] Face Not Recognized!")
+            return False
+
+    def verify_fingerprint(self):
+        """Simulate fingerprint recognition"""
+        print("\n[INFO] Place your finger on the scanner...")
+        match = random.choice([True, False])  # Simulating success/failure
+        if match:
+            print("[SUCCESS] Fingerprint Matched!")
+        else:
+            print("[ERROR] Fingerprint Not Recognized!")
+        return match
+
+    def verify_pin(self):
+        """Verify user PIN"""
+        attempts = 3
+        while attempts > 0:
+            entered_pin = input("Enter your PIN: ")
+            if entered_pin == self.pin:
+                return True
+            else:
+                attempts -= 1
+                print(f"Incorrect PIN. {attempts} attempts remaining.")
+        print("Too many incorrect attempts. Exiting...")
+        return False
+
+    def check_balance(self):
+        """Display account balance"""
+        print(f"\nYour current balance is: ₹{self.balance}\n")
+        self.transaction_history.append("Checked balance")
+
+    def withdraw_cash(self):
+        """Withdraw money"""
+        amount = float(input("Enter withdrawal amount: ₹"))
+        if amount > self.balance:
+            print("Insufficient funds!")
+        else:
+            self.balance -= amount
+            print(f"\nWithdrawal successful! New balance: ₹{self.balance}\n")
+            self.transaction_history.append(f"Withdrew ₹{amount}")
+
+    def deposit_cash(self):
+        """Deposit money"""
+        amount = float(input("Enter deposit amount: ₹"))
+        self.balance += amount
+        print(f"\nDeposit successful! New balance: ₹{self.balance}\n")
+        self.transaction_history.append(f"Deposited ₹{amount}")
+
+    def change_pin(self):
+        """Change PIN"""
+        new_pin = input("Enter new PIN: ")
+        confirm_pin = input("Confirm new PIN: ")
+        if new_pin == confirm_pin:
+            self.pin = new_pin
+            print("\nPIN changed successfully!\n")
+            self.transaction_history.append("Changed PIN")
+        else:
+            print("\nPINs do not match. Try again.\n")
+
+    def view_transaction_history(self):
+        """View transaction history"""
+        print("\nTransaction History:")
+        for transaction in self.transaction_history:
+            print("-", transaction)
+        print("\n")
+
+def main():
+    atm = ATM(pin="1234", balance=5000)
+
+    print("\n--- ATM Security Check ---")
+    if not atm.verify_face():
+        return
+    if not atm.verify_fingerprint():
+        return
+    if not atm.verify_pin():
+        return
+
+    while True:
+        print("\n--- ATM Menu ---")
+        print("1. Check Balance")
+        print("2. Withdraw Cash")
+        print("3. Deposit Cash")
+        print("4. Change PIN")
+        print("5. View Transaction History")
+        print("6. Exit")
+
+        choice = input("\nEnter your choice (1-6): ")
+
+        if choice == "1":
+            atm.check_balance()
+        elif choice == "2":
+            atm.withdraw_cash()
+        elif choice == "3":
+            atm.deposit_cash()
+        elif choice == "4":
+            atm.change_pin()
+        elif choice == "5":
+            atm.view_transaction_history()
+        elif choice == "6":
+            print("\nThank you for using the ATM. Goodbye!\n")
+            break
+        else:
+            print("\nInvalid choice. Please try again.\n")
+
+if __name__ == "__main__":
+    main()
